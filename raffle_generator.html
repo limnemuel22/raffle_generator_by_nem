@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Raffle System</title>
+    <style>
+        input[type="submit"],
+        button,
+        [aria-label] {
+            cursor: pointer;
+        }
+
+        #spoiler {
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
+    </script>
+</head>
+
+<body class="center-body" id="c">
+
+    <div class="flex-container">
+
+        <div style="flex-grow: 6">
+            <h3>Raffle Participants</h3>
+            <div class="container">
+                <form action="javascript:void(0);" method="POST" onsubmit="app.Add()">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" type="text" id="add-person"
+                            placeholder="New Participant">
+                        <div class="input-group-append">
+                            <input class="btn btn-primary" type="submit" value="Add">
+                        </div>
+                    </div>
+                </form>
+
+                <div id="spoiler" role="aria-hidden">
+                    <form action="javascript:void(0);" method="POST" id="saveEdit">
+                        <input type="text" id="edit-name" />
+                        <input type="submit" value="Edit" /> <a onclick="CloseInput()" aria-label="Close">&#10006;</a>
+                    </form>
+                </div>
+
+
+                <p id="counter"></p>
+                <center>
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col" style="text-align: center;">Name</th>
+                                <th scope="col" colspan="2" style="text-align: center;">Action</th>
+
+                            </tr>
+                        </thead>
+                        <tbody id="persons">
+
+                        </tbody>
+                    </table>
+                </center>
+            </div>
+        </div>
+        <div style="flex-grow: 6">
+            <h3>Raffle Generator</h3>
+            <div class="container">
+                <form action="javascript:void(0);" method="POST" onsubmit="app.Generate()">
+                    <input class="btn btn-primary" type="submit" value="Generate Winner">
+
+                    <div class="form-control bg-info text-center div-result">
+                        <h1 class="text-center" id="congrats"></h1>
+                        <h1 class="text-center" id="winner"></h1>
+                    </div>
+
+
+
+            </div>
+            </form>
+
+        </div>
+
+    </div>
+
+    </div>
+
+
+
+    <script>
+        var app = new(function () {
+            this.el = document.getElementById("persons");
+
+            this.persons = [];
+
+            this.Count = function (data) {
+                var el = document.getElementById("counter");
+                var name = "person";
+
+                if (data) {
+                    if (data > 1) {
+                        name = "persons";
+                    }
+                    el.innerHTML = data + " " + name;
+                } else {
+                    el.innerHTML = "No " + name;
+                }
+            };
+
+            this.FetchAll = function () {
+                var data = "";
+
+                if (this.persons.length > 0) {
+                    for (i = 0; i < this.persons.length; i++) {
+                        data += "<tr>";
+                        data += "<td style='text-align: center;'>" + this.persons[i] + "</td>";
+
+                        data +=
+                            '<td  style="text-align: center;"><button class="btn btn-danger" onclick="app.Delete(' +
+                            i +
+                            ')">Delete</button></td>';
+                        data +=
+                            '<td style="text-align: center;"><button class="btn btn-primary" onclick="app.Edit(' +
+                            i +
+                            ')">Edit</button></td>';
+                        data += "</tr>";
+                    }
+                }
+
+                this.Count(this.persons.length);
+                return (this.el.innerHTML = data);
+            };
+
+            this.Add = function () {
+                el = document.getElementById("add-person");
+                var person = el.value;
+
+                if (person) {
+                    this.persons.push(person.trim());
+                    el.value = "";
+                    this.FetchAll();
+                }
+            };
+
+            this.Generate = function () {
+                var myArray = this.persons;
+                var randomItem = myArray[Math.floor(Math.random() * myArray.length)];
+                document.getElementById("congrats").innerHTML = "Congratulations!";
+                document.getElementById("winner").innerHTML = randomItem;
+            }
+
+            this.Edit = function (item) {
+                var el = document.getElementById("edit-name");
+                el.value = this.persons[item];
+                document.getElementById("spoiler").style.display = "block";
+                self = this;
+                document.getElementById("saveEdit").onsubmit = function () {
+                    var person = el.value;
+                    if (person) {
+                        self.persons.splice(item, 1, person.trim());
+                        self.FetchAll();
+                        CloseInput();
+                    }
+                };
+            };
+
+            this.Delete = function (item) {
+                this.persons.splice(item, 1);
+                this.FetchAll();
+            };
+        })();
+
+        app.FetchAll();
+
+        function CloseInput() {
+            document.getElementById("spoiler").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>
+
+<style>
+    body {
+        background-color: black;
+    }
+
+    .container {
+        background-color: #f1f1f1;
+        padding: 50px;
+        border-radius: 10px;
+        width: 50%;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .flex-container {
+        display: flex;
+        align-items: stretch;
+        background-color: #f1f1f1;
+    }
+
+    .flex-container>div {
+        background-color: #f1f1f1;
+        color: black;
+        width: 100px;
+        margin: 10px;
+        text-align: center;
+        font-size: 1rem;
+    }
+
+    .div-result {
+        margin-top: 4rem;
+        height: 10rem;
+        text-align: center;
+
+    }
+
+    #congrats {
+        background-image: -webkit-gradient(linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #2f2), color-stop(0.75, #2f2), color-stop(0.9, #ff2), color-stop(1, #f22));
+
+        background-image: gradient(linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #2f2), color-stop(0.75, #2f2), color-stop(0.9, #ff2), color-stop(1, #f22));
+
+        color: transparent;
+
+        border: 2px dotted white;
+
+        -webkit-background-clip: text;
+
+        background-clip: text;
+
+    }
+</style>
